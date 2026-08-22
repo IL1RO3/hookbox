@@ -1,0 +1,17 @@
+# virtual environments
+.venv/
+
+# environment variables
+.env
+
+# cache related
+__pycache__/
+*.py[cod]
+
+# Django
+*.log
+media/
+staticfiles/
+
+
+
