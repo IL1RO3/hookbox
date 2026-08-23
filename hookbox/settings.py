@@ -38,7 +38,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'django-filters',
+    'django_filters',
     'webhook',
     'rest_framework',
     'django.contrib.admin',
@@ -141,5 +141,5 @@ MAILERS = {
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS":"rest_framework.pagination.PageNumberPagination",
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
-    "PAGE_SIZE": 1,
+    "PAGE_SIZE": 15,
 }

@@ -26,7 +26,7 @@ class EndpointViewSet(viewsets.ModelViewSet):
     ] 
 
     ordering_fields = [
-    "created_at"
+        "created_at"
     ]
 
     @action(detail=True, methods=['get'])

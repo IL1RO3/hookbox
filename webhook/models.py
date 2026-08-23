@@ -18,7 +18,7 @@ class Endpoint(models.Model):
 
 class RequestLog(models.Model):
     endpoint = models.ForeignKey(Endpoint, on_delete=models.CASCADE)
-    method = models.JSONField()
+    method = models.CharField(max_length=10)
     headers = models.JSONField()
     query_params = models.JSONField()
     payload = models.TextField()
