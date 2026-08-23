@@ -1,5 +1,8 @@
+from django.forms import fields, model_to_dict
+from django.utils.autoreload import request_finished
 from rest_framework import serializers
-from webhook.models import Endpoint
+from rest_framework.relations import PrimaryKeyRelatedField
+from webhook.models import Endpoint, RequestLog
 
 class EndpointSerializer(serializers.ModelSerializer):
     class Meta:
@@ -7,3 +10,8 @@ class EndpointSerializer(serializers.ModelSerializer):
         fields = ['owner','name', 'created_at','token']
 
 
+
+class RequestLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RequestLog
+        fields = ['method', 'headers', 'query_params', 'payload', 'received_at']

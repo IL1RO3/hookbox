@@ -21,10 +21,5 @@ class RequestLog(models.Model):
     method = models.JSONField()
     headers = models.JSONField()
     query_params = models.JSONField()
-    body = models.TextField()
+    payload = models.TextField()
     received_at = models.DateTimeField(auto_now_add=True)
-
-    
-
-
-
