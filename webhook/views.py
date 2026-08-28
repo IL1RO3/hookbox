@@ -11,6 +11,7 @@ from rest_framework.decorators import action
 from django.views.decorators.csrf import csrf_exempt
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
+
 # Create your views here.
 
 class EndpointViewSet(viewsets.ModelViewSet):
@@ -59,11 +60,13 @@ class EndpointViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         return serializer.save(owner=self.request.user)
 
+    def get_queryset(self):
+        return Endpoint.objects.filter(owner=self.request.user)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class CaptureView(APIView):
     authentication_classes = []
-    permission_classes = [AllowAny]
+    permission_classes = []
   
     def handle_request(self, request, token):
         endpoint = Endpoint.objects.get(token=token)
@@ -101,3 +104,6 @@ class RequestLogViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = ["method", "endpoint"]
     ordering_fields = ['received_at']
+
+    def get_queryset(self):
+        return RequestLog.objects.filter(endpoint__owner=self.request.user)

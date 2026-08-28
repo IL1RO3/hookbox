@@ -139,7 +139,15 @@ MAILERS = {
 
 
 REST_FRAMEWORK = {
-    "DEFAULT_PAGINATION_CLASS":"rest_framework.pagination.PageNumberPagination",
+    'DEFAULT_PAGINATION_CLASS':'rest_framework.pagination.PageNumberPagination',
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
-    "PAGE_SIZE": 15,
+    'PAGE_SIZE': 15,
+    'DEFAULT_THROTTLE_CLASSES':[
+        'webhook.throttles.BurstRateThrottle',
+        'webhook.throttles.SustainedRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES':{
+        'burst': '60/min',
+        'sustained': '1000/day',
+    }
 }
