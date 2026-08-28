@@ -2,6 +2,7 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
+from webhook.filters import RequestLogFilter
 from webhook.models import Endpoint, RequestLog
 from rest_framework.response import Response
 from webhook.serializers import EndpointSerializer, RequestLogSerializer
@@ -29,11 +30,16 @@ class EndpointViewSet(viewsets.ModelViewSet):
         "created_at"
     ]
 
-    @action(detail=True, methods=['get'])
+    @action(detail=True,methods=['get'])
     def requests(self, request, pk=None):
         endpoint = self.get_object()
 
         queryset = RequestLog.objects.filter(endpoint=endpoint)
+
+        queryset = RequestLogFilter(
+            request.query_params,
+            queryset=queryset,
+        ).qs
         
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -49,6 +55,9 @@ class EndpointViewSet(viewsets.ModelViewSet):
         )
 
         return Response(serializer.data)
+
+    def perform_create(self, serializer):
+        return serializer.save(owner=self.request.user)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -89,5 +98,6 @@ class RequestLogViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = RequestLog.objects.all()
     serializer_class = RequestLogSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = ["method", "endpoint"]
+    ordering_fields = ['received_at']

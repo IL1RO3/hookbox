@@ -5,6 +5,7 @@ from rest_framework.relations import PrimaryKeyRelatedField
 from webhook.models import Endpoint, RequestLog
 
 class EndpointSerializer(serializers.ModelSerializer):
+    owner = serializers.ReadOnlyField(source='owner.username')
     class Meta:
         model = Endpoint
         fields = ['owner','name', 'created_at','token']
