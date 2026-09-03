@@ -1,7 +1,8 @@
 
+from django.forms.utils import timezone
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.views import APIView
+from rest_framework.views import APIView, status
 from webhook.filters import RequestLogFilter
 from webhook.models import Endpoint, RequestLog
 from rest_framework.response import Response
@@ -69,8 +70,17 @@ class CaptureView(APIView):
     permission_classes = []
   
     def handle_request(self, request, token):
-        endpoint = Endpoint.objects.get(token=token)
-
+        try:
+            endpoint = Endpoint.objects.get(token=token)
+        except Endpoint.DoesNotExist:
+            return Response({'message': 'Token was not found.'}, status=status.HTTP_404_NOT_FOUND)
+        
+        if endpoint.expiration_date:
+            if endpoint.expiration_date >= timezone.localtime(endpoint.expiration_date):
+                pass
+            else:
+                return Response({'message': 'Token is expired.'},status=status.HTTP_410_GONE)
+        print(endpoint.expiration_date , timezone.localtime(endpoint.expiration_date))
         request_log = RequestLog.objects.create(
             endpoint=endpoint,
             method=request.method,
@@ -79,13 +89,13 @@ class CaptureView(APIView):
             payload=request.body.decode()
         )
 
-        return Response({'recived': True})
-
+        return Response({'recived': True}, status=status.HTTP_201_CREATED)
     
+
     def get(self, request, token):
         return self.handle_request(request, token)
 
-    def post(self, request, token):
+    def post(self, request, token): 
         return self.handle_request(request, token)
  
     def put(self, request, token):

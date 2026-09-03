@@ -7,10 +7,12 @@ import uuid
 # Create your models here.
 
 class Endpoint(models.Model):
+
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=200)
     token = models.UUIDField(unique=True, editable=False, default=uuid.uuid4)
     created_at = models.DateTimeField(auto_now=True)
+    expiration_date = models.DateTimeField(default=None, blank=True, null=True)
 
     def __str__(self):
         return f'name: {self.name}\ntoken: {self.token}'
@@ -23,3 +25,5 @@ class RequestLog(models.Model):
     query_params = models.JSONField()
     payload = models.TextField()
     received_at = models.DateTimeField(auto_now_add=True)
+
+
