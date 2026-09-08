@@ -1,4 +1,6 @@
 
+import uuid
+
 from django.forms.utils import timezone
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -58,11 +60,39 @@ class EndpointViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data)
 
+    @action(detail=True, methods=['patch', 'delete'])
+    def token(self, request, pk=None):
+        endpoint = self.get_object()
+
+        if request.method == 'PATCH':
+            endpoint.token = uuid.uuid4()
+            endpoint.save(update_fields=['token'])
+
+            return Response({
+                'message': 'Token rotation done!',
+                'token' : endpoint.token,
+            })
+
+        elif request.method == 'DELETE':
+            endpoint.revoked = True
+            endpoint.save(update_fields=['revoked'])
+
+            return Response(
+                 {"message": "Token revoked"},
+                 status=status.HTTP_204_NO_CONTENT
+            )
+
+
+
+        
     def perform_create(self, serializer):
         return serializer.save(owner=self.request.user)
 
     def get_queryset(self):
         return Endpoint.objects.filter(owner=self.request.user)
+
+    
+          
 
 @method_decorator(csrf_exempt, name='dispatch')
 class CaptureView(APIView):
@@ -80,7 +110,10 @@ class CaptureView(APIView):
                 pass
             else:
                 return Response({'message': 'Token is expired.'},status=status.HTTP_410_GONE)
-        print(endpoint.expiration_date , timezone.localtime(endpoint.expiration_date))
+
+        if endpoint.revoked:
+            return Response({'message': 'Token is revoked.'}, status=status.HTTP_410_GONE)
+
         request_log = RequestLog.objects.create(
             endpoint=endpoint,
             method=request.method,
