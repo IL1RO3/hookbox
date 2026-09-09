@@ -28,5 +28,6 @@ class RequestLog(models.Model):
     query_params = models.JSONField()
     payload = models.TextField()
     received_at = models.DateTimeField(auto_now_add=True)
-
-
+    client_ip = models.GenericIPAddressField(default='0.0.0.0')
+    content_type = models.CharField(null=True, blank=True)
+    

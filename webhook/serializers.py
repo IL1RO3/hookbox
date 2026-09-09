@@ -23,4 +23,4 @@ class EndpointSerializer(serializers.ModelSerializer):
 class RequestLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = RequestLog
-        fields = ['method', 'headers', 'query_params', 'payload', 'received_at']
+        fields = ['method', 'headers', 'query_params', 'payload', 'received_at', 'client_ip','content_type']

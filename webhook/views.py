@@ -15,7 +15,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 
-# Create your views here.
+# endpoint viewset
 
 class EndpointViewSet(viewsets.ModelViewSet):
     queryset = Endpoint.objects.all().order_by('-created_at')
@@ -33,6 +33,8 @@ class EndpointViewSet(viewsets.ModelViewSet):
     ordering_fields = [
         "created_at"
     ]
+
+    # nested /requests action
 
     @action(detail=True,methods=['get'])
     def requests(self, request, pk=None):
@@ -60,6 +62,9 @@ class EndpointViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data)
 
+
+    # nested url path for rotation or revokation
+
     @action(detail=True, methods=['patch', 'delete'])
     def token(self, request, pk=None):
         endpoint = self.get_object()
@@ -74,7 +79,7 @@ class EndpointViewSet(viewsets.ModelViewSet):
             })
 
         elif request.method == 'DELETE':
-            endpoint.revoked = True
+            endpoint.revoked = True 
             endpoint.save(update_fields=['revoked'])
 
             return Response(
@@ -82,9 +87,7 @@ class EndpointViewSet(viewsets.ModelViewSet):
                  status=status.HTTP_204_NO_CONTENT
             )
 
-
-
-        
+    
     def perform_create(self, serializer):
         return serializer.save(owner=self.request.user)
 
@@ -93,12 +96,15 @@ class EndpointViewSet(viewsets.ModelViewSet):
 
     
           
+# capture view to record requests
 
 @method_decorator(csrf_exempt, name='dispatch')
 class CaptureView(APIView):
     authentication_classes = []
     permission_classes = []
-  
+    
+    # request handlers which is used for all methods explicitly
+
     def handle_request(self, request, token):
         try:
             endpoint = Endpoint.objects.get(token=token)
@@ -113,13 +119,17 @@ class CaptureView(APIView):
 
         if endpoint.revoked:
             return Response({'message': 'Token is revoked.'}, status=status.HTTP_410_GONE)
+        
+        client_ip = request.META.get('REMOTE_ADDR')
 
         request_log = RequestLog.objects.create(
             endpoint=endpoint,
             method=request.method,
             headers=dict(request.headers),
             query_params=request.query_params,
-            payload=request.body.decode()
+            payload=request.body.decode(),
+            client_ip=client_ip,
+            content_type = request.content_type,
         )
 
         return Response({'recived': True}, status=status.HTTP_201_CREATED)
@@ -140,6 +150,9 @@ class CaptureView(APIView):
     def delete(self, request, token):
         return self.handle_request(request, token)
 
+
+# requestlog views which holds all records
+
 class RequestLogViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = RequestLog.objects.all()
     serializer_class = RequestLogSerializer
@@ -150,3 +163,6 @@ class RequestLogViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         return RequestLog.objects.filter(endpoint__owner=self.request.user)
+
+
+ 
