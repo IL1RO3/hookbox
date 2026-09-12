@@ -1,6 +1,5 @@
-
 import uuid
-
+import httpx
 from django.forms.utils import timezone
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -112,7 +111,7 @@ class CaptureView(APIView):
             return Response({'message': 'Token was not found.'}, status=status.HTTP_404_NOT_FOUND)
         
         if endpoint.expiration_date:
-            if endpoint.expiration_date >= timezone.localtime(endpoint.expiration_date):
+            if endpoint.expiration_date >= timezone.localtime(timezone.now()):
                 pass
             else:
                 return Response({'message': 'Token is expired.'},status=status.HTTP_410_GONE)
@@ -129,7 +128,7 @@ class CaptureView(APIView):
             query_params=request.query_params,
             payload=request.body.decode(),
             client_ip=client_ip,
-            content_type = request.content_type,
+            content_type = request.content_type
         )
 
         return Response({'recived': True}, status=status.HTTP_201_CREATED)
@@ -165,4 +164,52 @@ class RequestLogViewSet(viewsets.ReadOnlyModelViewSet):
         return RequestLog.objects.filter(endpoint__owner=self.request.user)
 
 
- 
+    @action(detail=True, methods=['post'])
+    def replay(self,request,pk=None):
+        destination_url = request.data.get('url')
+        request_obj = self.get_object()
+
+        excluded = {
+            "host",
+            "content-length",
+            "connection",
+            "keep-alive",
+            "proxy-connection",
+            "transfer-encoding",
+            "te",
+            "trailer",
+            "upgrade",
+        }
+    
+        headers = {
+            key: value
+            for key, value in request_obj.headers.items()
+            if key.lower() not in excluded
+        }
+
+        response = httpx.request(
+            method=request_obj.method,
+            url=destination_url,
+            headers=headers,
+            params=request_obj.query_params,
+            content=request_obj.payload,
+        )
+
+        result = {
+            "destination_url": destination_url,
+            "status_code": response.status_code,
+            "headers": dict(response.headers),
+            "body": response.text,
+            "replayed_at": timezone.localtime().isoformat(),
+        }
+
+        request_obj.replay_results.append(result)
+        request_obj.save(update_fields=['replay_results'])
+
+        return Response({
+            "status_code": response.status_code,
+            "headers": dict(response.headers),
+            "body": response.text,
+        })
+
+          

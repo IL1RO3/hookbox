@@ -30,4 +30,5 @@ class RequestLog(models.Model):
     received_at = models.DateTimeField(auto_now_add=True)
     client_ip = models.GenericIPAddressField(default='0.0.0.0')
     content_type = models.CharField(null=True, blank=True)
+    replay_results = models.JSONField(default=list,blank=True)
     
