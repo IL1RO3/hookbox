@@ -9,10 +9,10 @@ class EndpointSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')
     class Meta:
         model = Endpoint
-        fields = ['expiration_date','owner','name', 'created_at','token', 'revoked']
+        fields = ['expiration_date','owner','name', 'created_at','token', 'revoked','mock_status', 'mock_body', 'mock_enabled']
 
     def validate_expiration_date (self, value):
-        if value < timezone.localtime():
+        if value is not None < timezone.localtime(timezone.now()):
             raise serializers.ValidationError(
                 "Invalid Expiration Date!"
             )

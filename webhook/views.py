@@ -1,4 +1,6 @@
+import csv
 import uuid
+from django.http.response import HttpResponse
 import httpx
 from django.forms.utils import timezone
 from rest_framework import viewsets
@@ -83,7 +85,7 @@ class EndpointViewSet(viewsets.ModelViewSet):
 
             return Response(
                  {"message": "Token revoked"},
-                 status=status.HTTP_204_NO_CONTENT
+                 status=status.HTTP_200_OK
             )
 
     
@@ -118,6 +120,10 @@ class CaptureView(APIView):
 
         if endpoint.revoked:
             return Response({'message': 'Token is revoked.'}, status=status.HTTP_410_GONE)
+
+        if endpoint.mock_enabled:
+
+            return Response(endpoint.mock_body , endpoint.mock_status)
         
         client_ip = request.META.get('REMOTE_ADDR')
 
@@ -130,6 +136,8 @@ class CaptureView(APIView):
             client_ip=client_ip,
             content_type = request.content_type
         )
+
+
 
         return Response({'recived': True}, status=status.HTTP_201_CREATED)
     
@@ -162,6 +170,43 @@ class RequestLogViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         return RequestLog.objects.filter(endpoint__owner=self.request.user)
+
+    @action(detail=False, methods=['get'])
+    def export(self,request):
+        logs = self.get_queryset()
+        response = HttpResponse(
+            content="text/csv"
+        )
+
+        response["Content-Disposition"] = (
+            'attachment; filename="request-logs.csv"'
+        )
+
+        writer = csv.writer(response)
+
+        writer.writerow([
+            "id",
+            "method",
+            "headers",
+            "query_params",
+            "payload",
+            "received_at"
+        ])
+
+        for log in logs:
+            writer.writerow([
+                log.id,
+                log.method,
+                log.headers,
+                log.query_params,
+                log.payload,
+                log.received_at
+            ])
+
+        return response
+
+        
+
 
 
     @action(detail=True, methods=['post'])

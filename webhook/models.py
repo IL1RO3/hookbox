@@ -1,8 +1,11 @@
 
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models.base import model_unpickle
 from django.dispatch import receiver
 import uuid
+from django.db.models import Q
+from httpx._transports import default
 
 
 # Create your models here.
@@ -14,10 +17,20 @@ class Endpoint(models.Model):
     created_at = models.DateTimeField(auto_now=True)
     expiration_date = models.DateTimeField(default=None, blank=True, null=True)
     revoked = models.BooleanField(default=False)
-
-
+    mock_enabled = models.BooleanField(default=False)
+    mock_status = models.IntegerField(blank=True, null=True)
+    mock_body = models.JSONField(blank=True,null=True)
+    
     def __str__(self):
         return f'name: {self.name}\ntoken: {self.token}'
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(mock_status__gte=100) & Q(mock_status__lte=599),
+                name="valid_http_status_code", 
+            )
+        ]
     
    
 
