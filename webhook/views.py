@@ -126,6 +126,7 @@ class CaptureView(APIView):
             return Response(endpoint.mock_body , endpoint.mock_status)
         
         client_ip = request.META.get('REMOTE_ADDR')
+        request_duration = request.META.get("X_REQUEST_DURATION")
 
         request_log = RequestLog.objects.create(
             endpoint=endpoint,
@@ -134,11 +135,11 @@ class CaptureView(APIView):
             query_params=request.query_params,
             payload=request.body.decode(),
             client_ip=client_ip,
-            content_type = request.content_type
+            content_type=request.content_type,
+            request_duration=request_duration,
         )
 
-
-
+        request._request.request_log = request_log
         return Response({'recived': True}, status=status.HTTP_201_CREATED)
     
 

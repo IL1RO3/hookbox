@@ -25,6 +25,7 @@ class RequestLogSerializer(serializers.ModelSerializer):
         model = RequestLog
         fields = [
             'id',
+            'request_duration',
             'method',
             'headers', 
             'query_params', 
@@ -34,3 +35,13 @@ class RequestLogSerializer(serializers.ModelSerializer):
             'content_type',
             'replay_results'
         ]
+
+    request_duration = serializers.SerializerMethodField()
+
+    def get_request_duration(self, obj):
+        if obj.request_duration is None:
+            return None
+
+        return round(obj.request_duration.total_seconds() * 1000, 2)
+
+
