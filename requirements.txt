@@ -1,9 +1,16 @@
+anyio==4.15.1
 asgiref==3.12.1
+certifi==2026.7.22
 dj-database-url==3.1.2
 Django==6.1
 django-filter==26.1
 djangorestframework==3.18.0
 dotenv==0.9.9
+h11==0.16.0
+httpcore==1.0.9
+httpx==0.28.1
+idna==3.19
 psycopg2==2.9.12
 python-dotenv==1.2.3
 sqlparse==0.6.0
+typing_extensions==4.16.0

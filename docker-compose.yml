@@ -1,0 +1,41 @@
+services:
+  backend:
+    build:
+      context: .
+    ports:
+      - '8001:8000'
+    env_file:
+      - .env
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    depends_on: 
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16.5
+    env_file:
+      - .env
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        # Strips out: postgresql://USER:PASSWORD@HOST:PORT/DB
+        REST=$${DATABASE_URL#*://}
+        USER_PASS=$${REST%%@*}
+        HOST_PORT_DB=$${REST#*@}
+        export POSTGRES_USER=$${USER_PASS%%:*}
+        export POSTGRES_PASSWORD=$${USER_PASS#*:}
+        export POSTGRES_DB=$${HOST_PORT_DB#*/}
+        exec docker-entrypoint.sh postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+
+volumes:
+  postgres_data:
+
