@@ -1,0 +1,32 @@
+# Environment & Secrets
+.env
+*.env
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python caches and bytecode (Crucial)
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+# Git metadata
+.git/
+.gitignore
+
+# Documentation & repo metadata
+TODO.md
+LICENSE
+README.md
+
+# Docker configs (not needed inside /app)
+Dockerfile
+compose.yaml
+docker-compose*.yml
+.dockerignore
+
+# IDE configs
+.vscode/
+.idea/
